@@ -11,7 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+<<<<<<< HEAD
 .env
+=======
+
+>>>>>>> e81a7d07518dac78bb3d506eb5831362e6e29bfb
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,5 +26,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+<<<<<<< HEAD
 
 serviceAccountKey.json
+=======
+>>>>>>> e81a7d07518dac78bb3d506eb5831362e6e29bfb
