@@ -4,6 +4,7 @@ import LoadingSpinner from '../../components/Shared/LoadingSpinner'
 import useAuth from '../../hooks/useAuth'
 import { FcGoogle } from 'react-icons/fc'
 import { TbFidgetSpinner } from 'react-icons/tb'
+import LoginImage from '../../assets/auth/login.gif'
 
 const Login = () => {
   const { signIn, signInWithGoogle, loading, user, setLoading } = useAuth()
@@ -139,6 +140,9 @@ const Login = () => {
           </Link>
           .
         </p>
+      </div>
+      <div>
+        <img src={LoginImage} alt="" />
       </div>
     </div>
   )
