@@ -4,7 +4,7 @@ import useAuth from "../../hooks/useAuth";
 import { toast } from "react-hot-toast";
 import { TbFidgetSpinner } from "react-icons/tb";
 import { useForm } from "react-hook-form";
-import LoginImage from '../../assets/auth/login.gif'
+import LoginImage from "../../assets/auth/login.gif";
 import { imageUpload } from "../../utilis";
 
 const SignUp = () => {
@@ -19,7 +19,7 @@ const SignUp = () => {
   const {
     register,
     handleSubmit,
-   
+
     formState: { errors },
   } = useForm();
 
@@ -116,7 +116,7 @@ const SignUp = () => {
                 type="text"
                 id="name"
                 placeholder="Enter Your Name Here"
-                className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-lime-500 bg-gray-200 text-gray-900"
+                className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-primary bg-gray-200 text-gray-900"
                 data-temp-mail-org="0"
                 {...register("name", {
                   required: "Name is required",
@@ -150,7 +150,7 @@ const SignUp = () => {
                 file:text-sm file:font-semibold
                 file:bg-lime-50 file:text-lime-700
                 hover:file:bg-lime-100
-                bg-gray-100 border border-dashed border-lime-300 rounded-md cursor-pointer
+                bg-gray-100 border border-dashed border-gray-300 rounded-md cursor-pointer
                 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400
                 py-2"
                 {...register("image")}
@@ -174,7 +174,7 @@ const SignUp = () => {
                 })}
                 id="email"
                 placeholder="Enter Your Email Here"
-                className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-lime-500 bg-gray-200 text-gray-900"
+                className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-primary bg-gray-200 text-gray-900"
                 data-temp-mail-org="0"
               />
               {errors.email && (
@@ -201,7 +201,7 @@ const SignUp = () => {
                 autoComplete="new-password"
                 id="password"
                 placeholder="*******"
-                className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-lime-500 bg-gray-200 text-gray-900"
+                className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-primary bg-gray-200 text-gray-900"
               />
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">
@@ -214,7 +214,7 @@ const SignUp = () => {
           <div>
             <button
               type="submit"
-              className="bg-lime-500 w-full rounded-md py-3 text-white"
+              className="bg-primary w-full rounded-md py-3 text-white"
             >
               {loading ? (
                 <TbFidgetSpinner className="animate-spin m-auto" />
@@ -243,7 +243,7 @@ const SignUp = () => {
           Already have an account?{" "}
           <Link
             to="/login"
-            className="hover:underline hover:text-lime-500 text-gray-600"
+            className="hover:underline hover:text-primary text-gray-600"
           >
             Login
           </Link>

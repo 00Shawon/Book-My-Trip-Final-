@@ -19,7 +19,7 @@ app.use(
     origin: [
       'http://localhost:5173',
       'http://localhost:5174',
-      'https://b12-m11-session.web.app',
+      'https://bookmytrip.web.app',
     ],
     credentials: true,
     optionSuccessStatus: 200,
@@ -52,6 +52,25 @@ const client = new MongoClient(process.env.MONGODB_URI, {
   },
 })
 async function run() {
+const db = client.db('bookMyTripDB')
+const ticketsCollection = db.collection('tickets')
+
+
+//save ticket data in db
+app.post('/tickets',   async (req, res) => {
+  const ticket = req.body
+  console.log(ticket)
+  const result = await ticketsCollection.insertOne(ticket)
+  res.send(result)
+}) 
+
+// get all tickets 
+app.get('/tickets',  async(req,res) => {
+  const result = await ticketsCollection.find().toArray();   
+  res.send(result)
+})
+
+
   try {
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })

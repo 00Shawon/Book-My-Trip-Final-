@@ -1,122 +1,276 @@
-const AddPlantForm = () => {
+import { useForm } from "react-hook-form";
+import { imageUpload } from "../../utilis";
+import useAuth from "../../hooks/useAuth";
+import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
+import LoadingSpinner from "../Shared/LoadingSpinner";
+import ErrorPage from "../../pages/ErrorPage";
+import toast from "react-hot-toast";
+import { TbFidgetSpinner } from "react-icons/tb";
 
-  
+const AddTicketForm = () => {
+  const { user } = useAuth();
+
+//use mutation from react query to post data
+
+const {isPending, isError,mutateAsync ,reset: mutationReset} = useMutation({
+  mutationFn: async(payload)=> await axios.post(`${import.meta.env.VITE_API_URL}/tickets`,payload),
+  onSuccess: data => {
+    console.log(data)
+    toast.success('Ticket Added Successfully')
+    mutationReset()
+  },
+  onError: error => {
+    console.log(error)
+  },
+  onMutate: payload => {
+    console.log('posting this Data:',payload)
+  },
+  retry: 3
+
+})
+
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm();
+
+  const onSubmit = async (data) => {
+    const {
+      title,
+      from,
+      to,
+      category,
+      price,
+      quantity,
+      date,
+      time,
+      perk,
+      image,
+    } = data;
+    const imageFile = image[0];
+
+    try {
+      const imageUrl = await imageUpload(imageFile);
+      const ticketData = {
+        image: imageUrl,
+        title,
+        from,
+        to,
+        category,
+        price: Number(price),
+        quantity: Number(quantity),
+        date,
+        time,
+        perk,
+        seller: {
+          image: user?.photoURL,
+          name: user?.displayName,
+          email: user?.email,
+        },
+      };
+      await mutateAsync(ticketData)
+      reset()
+    } catch (error) {
+      console.log("Error while adding ticket :", error);
+    }
+
+    if(isPending) return <LoadingSpinner/>
+if(isError) return <ErrorPage/>
+
+
+    // 1. Upload image to imgbb
+    // const image = data.image[0];
+    // const imgData = new FormData();
+    // imgData.append("image", image);
+    //
+    // const res = await fetch(`https://api.imgbb.com/1/upload?key=YOUR_IMGBB_KEY`, {
+    //   method: "POST",
+    //   body: imgData,
+    // });
+    // const imgResult = await res.json();
+
+    // 2. Save ticket with uploaded image URL
+    // data.image = imgResult.data.url
+    // await addTicket(data)
+  };
+
+  const perksList = ["AC", "WiFi", "Breakfast", "Water", "TV"];
 
   return (
-    <div className='w-full min-h-[calc(100vh-40px)] flex flex-col justify-center items-center text-gray-800 rounded-xl bg-gray-50'>
-      <form>
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-10'>
-          <div className='space-y-6'>
-            {/* Name */}
-            <div className='space-y-1 text-sm'>
-              <label htmlFor='name' className='block text-gray-600'>
-                Name
-              </label>
-              <input
-                className='w-full px-4 py-3 text-gray-800 border border-lime-300 focus:outline-lime-500 rounded-md bg-white'
-                name='name'
-                id='name'
-                type='text'
-                placeholder='Plant Name'
-                required
-              />
-            </div>
-            {/* Category */}
-            <div className='space-y-1 text-sm'>
-              <label htmlFor='category' className='block text-gray-600 '>
-                Category
-              </label>
-              <select
-                required
-                className='w-full px-4 py-3 border-lime-300 focus:outline-lime-500 rounded-md bg-white'
-                name='category'
-              >
-                <option value='Indoor'>Indoor</option>
-                <option value='Outdoor'>Outdoor</option>
-                <option value='Succulent'>Succulent</option>
-                <option value='Flowering'>Flowering</option>
-              </select>
-            </div>
-            {/* Description */}
-            <div className='space-y-1 text-sm'>
-              <label htmlFor='description' className='block text-gray-600'>
-                Description
-              </label>
+    <div className="w-full min-h-screen flex justify-center items-center bg-gray-50">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-full max-w-3xl p-8 rounded-lg bg-white shadow"
+      >
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+          Add New Ticket
+        </h2>
 
-              <textarea
-                id='description'
-                placeholder='Write plant description here...'
-                className='block rounded-md focus:lime-300 w-full h-32 px-4 py-3 text-gray-800  border border-lime-300 bg-white focus:outline-lime-500 '
-                name='description'
-              ></textarea>
-            </div>
+        {/* Ticket title */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-700">Ticket title</label>
+          <input
+            className="w-full border p-3 rounded"
+            {...register("title", { required: "Title is required" })}
+            placeholder="Dhaka to Cox’s Bazar"
+          />
+          {errors.title && (
+            <p className="text-sm text-red-500">{errors.title.message}</p>
+          )}
+        </div>
+
+        {/* From & To */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* From */}
+          <div>
+            <label className="block mb-1 text-gray-700">From</label>
+            <input
+              className="w-full border p-3 rounded"
+              {...register("from", { required: "From location is required" })}
+              placeholder="Dhaka"
+            />
+            {errors.from && (
+              <p className="text-sm text-red-500">{errors.from.message}</p>
+            )}
           </div>
-          <div className='space-y-6 flex flex-col'>
-            {/* Price & Quantity */}
-            <div className='flex justify-between gap-2'>
-              {/* Price */}
-              <div className='space-y-1 text-sm'>
-                <label htmlFor='price' className='block text-gray-600 '>
-                  Price
-                </label>
-                <input
-                  className='w-full px-4 py-3 text-gray-800 border border-lime-300 focus:outline-lime-500 rounded-md bg-white'
-                  name='price'
-                  id='price'
-                  type='number'
-                  placeholder='Price per unit'
-                  required
-                />
-              </div>
 
-              {/* Quantity */}
-              <div className='space-y-1 text-sm'>
-                <label htmlFor='quantity' className='block text-gray-600'>
-                  Quantity
-                </label>
-                <input
-                  className='w-full px-4 py-3 text-gray-800 border border-lime-300 focus:outline-lime-500 rounded-md bg-white'
-                  name='quantity'
-                  id='quantity'
-                  type='number'
-                  placeholder='Available quantity'
-                  required
-                />
-              </div>
-            </div>
-            {/* Image */}
-            <div className=' p-4  w-full  m-auto rounded-lg grow'>
-              <div className='file_upload px-5 py-3 relative border-4 border-dotted border-gray-300 rounded-lg'>
-                <div className='flex flex-col w-max mx-auto text-center'>
-                  <label>
-                    <input
-                      className='text-sm cursor-pointer w-36 hidden'
-                      type='file'
-                      name='image'
-                      id='image'
-                      accept='image/*'
-                      hidden
-                    />
-                    <div className='bg-lime-500 text-white border border-gray-300 rounded font-semibold cursor-pointer p-1 px-3 hover:bg-lime-500'>
-                      Upload
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type='submit'
-              className='w-full cursor-pointer p-3 mt-5 text-center font-medium text-white transition duration-200 rounded shadow-md bg-lime-500 '
-            >
-              Save & Continue
-            </button>
+          {/* To */}
+          <div>
+            <label className="block mb-1 text-gray-700">To</label>
+            <input
+              className="w-full border p-3 rounded"
+              {...register("to", { required: "Destination is required" })}
+              placeholder="Cox’s Bazar"
+            />
+            {errors.to && (
+              <p className="text-sm text-red-500">{errors.to.message}</p>
+            )}
           </div>
         </div>
+
+        {/* Transport Type */}
+        <div className="mt-4">
+          <label className="block mb-1 text-gray-700">Transport type</label>
+          <select
+            className="w-full border p-3 rounded"
+            {...register("category", {
+              required: "Transport type is required",
+            })}
+          >
+            <option value="Bus">Bus</option>
+            <option value="Train">Train</option>
+            <option value="Ship">Ship</option>
+            <option value="Air">Air</option>
+          </select>
+        </div>
+
+        {/* Price & Quantity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block mb-1 text-gray-700">Price (per unit)</label>
+            <input
+              type="number"
+              className="w-full border p-3 rounded"
+              {...register("price", { required: "Price is required" })}
+              placeholder="1500"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-gray-700">Ticket quantity</label>
+            <input
+              type="number"
+              className="w-full border p-3 rounded"
+              {...register("quantity", { required: "Quantity is required" })}
+              placeholder="1"
+            />
+          </div>
+        </div>
+
+        {/* Date & Time */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block mb-1 text-gray-700">Departure date</label>
+            <input
+              type="date"
+              className="w-full border p-3 rounded"
+              {...register("date", { required: "Date is required" })}
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-gray-700">Departure time</label>
+            <input
+              type="time"
+              className="w-full border p-3 rounded"
+              {...register("time", { required: "Time is required" })}
+            />
+          </div>
+        </div>
+
+        {/* Perks (Checkboxes) */}
+        <div className="mt-4">
+          <p className="mb-2 text-gray-700 font-medium">Perks</p>
+          <div className="flex gap-4 flex-wrap">
+            {perksList.map((perk) => (
+              <label key={perk} className="flex gap-2 items-center">
+                <input type="checkbox" value={perk} {...register("perks")} />
+                {perk}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Image Upload */}
+        <div className="mt-4">
+          <label className="block mb-1 text-gray-700">Upload image</label>
+          <input
+            type="file"
+            accept="image/*"
+            className="w-full border p-3 rounded"
+            {...register("image", { required: "Image is required" })}
+          />
+        </div>
+
+        {/* Vendor name & email (readonly) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block mb-1 text-gray-700">Vendor name</label>
+            <input
+              className="w-full border p-3 rounded bg-gray-200 cursor-not-allowed"
+              readOnly
+              {...register("vendorName")}
+              value="Shawon Hasan"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-gray-700">Vendor email</label>
+            <input
+              className="w-full border p-3 rounded bg-gray-200 cursor-not-allowed"
+              readOnly
+              {...register("vendorEmail")}
+              value="shawon@example.com"
+            />
+          </div>
+        </div>
+
+        {/* Submit button */}
+        <button
+          type="submit"
+          className="w-full mt-6 py-3 bg-primary text-white font-medium rounded shadow"
+        >
+         
+          {isPending ? (
+             <TbFidgetSpinner className='animate-spin m-auto '/>):(' Add Ticket') }
+        </button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default AddPlantForm
+export default AddTicketForm;
