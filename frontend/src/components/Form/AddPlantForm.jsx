@@ -50,6 +50,7 @@ const {isPending, isError,mutateAsync ,reset: mutationReset} = useMutation({
       time,
       perk,
       image,
+      
     } = data;
     const imageFile = image[0];
 
@@ -65,6 +66,7 @@ const {isPending, isError,mutateAsync ,reset: mutationReset} = useMutation({
         quantity: Number(quantity),
         date,
         time,
+        createdAt: new Date(),
         perk,
         seller: {
           image: user?.photoURL,

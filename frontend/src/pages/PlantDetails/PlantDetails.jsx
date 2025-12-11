@@ -3,87 +3,139 @@ import Heading from '../../components/Shared/Heading'
 import Button from '../../components/Shared/Button/Button'
 import PurchaseModal from '../../components/Modal/PurchaseModal'
 import { useState } from 'react'
+import { useParams } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 
 const PlantDetails = () => {
   let [isOpen, setIsOpen] = useState(false)
+const {id} = useParams()
 
+const {data:ticket={}, isLoading, refetch} = useQuery({
+  queryKey:['ticket', id],
+  queryFn: async() => {
+      const result =await axios(`${import.meta.env.VITE_API_URL}/tickets/${id}`)
+      return result.data
+    },
+})
   const closeModal = () => {
     setIsOpen(false)
   }
+  console.log(ticket)
+  if (isLoading) return <div>Loading...</div>;
+if (!ticket || !ticket._id) return <div>Ticket not found</div>;
 
+ const {
+    image,
+    title,
+    category,
+    date,
+    time,
+    from,
+    to,
+    price,
+    quantity,
+    seller
+  } = ticket
   return (
-    <Container>
-      <div className='mx-auto flex flex-col lg:flex-row justify-between w-full gap-12'>
-        {/* Header */}
-        <div className='flex flex-col gap-6 flex-1'>
-          <div>
-            <div className='w-full overflow-hidden rounded-xl'>
-              <img
-                className='object-cover w-full'
-                src='https://i.ibb.co/DDnw6j9/1738597899-golden-money-plant.jpg'
-                alt='header image'
-              />
+     <Container>
+      <div
+        className="
+          w-full mx-auto 
+          flex flex-col lg:flex-row 
+          gap-10 lg:gap-16 
+          py-6
+        "
+      >
+        {/* LEFT: Main Image */}
+        <div
+          className="
+            flex-1 
+            bg-white/40 backdrop-blur-xl 
+            rounded-2xl shadow-xl 
+            overflow-hidden border border-gray-200
+          "
+        >
+          <img
+            className="w-full h-full object-cover"
+            src={image}
+            alt={title}
+          />
+        </div>
+
+        {/* RIGHT: Info Section */}
+        <div className="flex-1 space-y-8">
+          {/* Heading */}
+          <Heading
+            title={title}
+            subtitle={`Category: ${category}`}
+          />
+
+          {/* Trip Info */}
+          <div
+            className="
+              bg-white/60 backdrop-blur-xl 
+              p-5 md:p-6 
+              rounded-2xl shadow border border-gray-200
+              space-y-3 text-gray-700
+            "
+          >
+            <div className="text-lg font-semibold">Trip Information</div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm md:text-base">
+              <p><span className="font-semibold">From:</span> {from}</p>
+              <p><span className="font-semibold">To:</span> {to}</p>
+              <p><span className="font-semibold">Date:</span> {date}</p>
+              <p><span className="font-semibold">Time:</span> {time}</p>
             </div>
           </div>
-        </div>
-        <div className='md:gap-10 flex-1'>
-          {/* Plant Info */}
-          <Heading
-            title={'Money Plant'}
-            subtitle={`Category: ${'Succulent'}`}
-          />
-          <hr className='my-6' />
-          <div
-            className='
-          text-lg font-light text-neutral-500'
-          >
-            Professionally deliver sticky testing procedures for next-generation
-            portals. Objectively communicate just in time infrastructures
-            before.
-          </div>
-          <hr className='my-6' />
 
+          {/* Seller Info */}
           <div
-            className='
-                text-xl 
-                font-semibold 
-                flex 
-                flex-row 
-                items-center
-                gap-2
-              '
+            className="
+              flex items-center justify-between 
+              bg-white/60 backdrop-blur-xl 
+              p-5 rounded-2xl shadow border border-gray-200
+            "
           >
-            <div>Seller: Shakil Ahmed Atik</div>
+            <div>
+              <p className="text-lg font-semibold">{seller.name}</p>
+              <p className="text-gray-500 text-sm">{seller.email}</p>
+            </div>
 
             <img
-              className='rounded-full'
-              height='30'
-              width='30'
-              alt='Avatar'
-              referrerPolicy='no-referrer'
-              src='https://lh3.googleusercontent.com/a/ACg8ocKUMU3XIX-JSUB80Gj_bYIWfYudpibgdwZE1xqmAGxHASgdvCZZ=s96-c'
+              className="rounded-full w-12 h-12"
+              alt="seller"
+              src={seller.image}
             />
           </div>
-          <hr className='my-6' />
-          <div>
-            <p
-              className='
-                gap-4 
-                font-light
-                text-neutral-500
-              '
-            >
-              Quantity: 10 Units Left Only!
+
+          {/* Quantity */}
+          <div
+            className="
+              bg-white/60 backdrop-blur-xl 
+              p-5 rounded-2xl shadow border border-gray-200
+              text-gray-700 font-medium
+            "
+          >
+            Available Tickets: {quantity}
+          </div>
+
+          {/* Price + Purchase */}
+          <div
+            className="
+              bg-white/60 backdrop-blur-xl 
+              p-5 rounded-2xl shadow border border-gray-200
+              flex flex-col sm:flex-row 
+              justify-between items-center
+              gap-4
+            "
+          >
+            <p className="font-bold text-2xl md:text-3xl text-gray-700">
+              Price: ৳{price}
             </p>
+            <Button onClick={() => setIsOpen(true)} label="Purchase" />
           </div>
-          <hr className='my-6' />
-          <div className='flex justify-between'>
-            <p className='font-bold text-3xl text-gray-500'>Price: 10$</p>
-            <div>
-              <Button onClick={() => setIsOpen(true)} label='Purchase' />
-            </div>
-          </div>
-          <hr className='my-6' />
 
           <PurchaseModal closeModal={closeModal} isOpen={isOpen} />
         </div>

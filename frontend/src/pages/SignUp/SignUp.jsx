@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import { TbFidgetSpinner } from "react-icons/tb";
 import { useForm } from "react-hook-form";
 import LoginImage from "../../assets/auth/login.gif";
-import { imageUpload } from "../../utilis";
+import { imageUpload} from "../../utilis";
 
 const SignUp = () => {
   const { createUser, updateUserProfile, signInWithGoogle, loading } =
@@ -39,6 +39,9 @@ const SignUp = () => {
       //   formData
       // );
       const imageURL = await imageUpload(imageFile);
+      // const imageURLCloudinary = await imageUploadCloudinary(imageFile);
+      // console.log('claudinary', imageURLCloudinary)
+ 
       //2. User Registration
       const result = await createUser(email, password);
 
