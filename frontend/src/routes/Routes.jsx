@@ -14,6 +14,8 @@ import MyInventory from '../pages/Dashboard/Seller/MyInventory'
 import ManageOrders from '../pages/Dashboard/Seller/ManageOrders'
 import MyOrders from '../pages/Dashboard/Customer/MyOrders'
 import { createBrowserRouter } from 'react-router'
+import PaymentSuccess from '../pages/PlantDetails/Payment/PaymentSuccess'
+
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +31,11 @@ export const router = createBrowserRouter([
         path: '/plant/:id',
         element: <PlantDetails />,
       },
+      {
+        path: '/payment-success',
+        element: <PaymentSuccess />,
+      },
+     
     ],
   },
   { path: '/login', element: <Login /> },

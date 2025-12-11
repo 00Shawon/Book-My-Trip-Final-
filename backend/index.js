@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const admin = require('firebase-admin')
 const port = process.env.PORT || 3000
 const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString(
@@ -16,11 +17,7 @@ const app = express()
 // middleware
 app.use(
   cors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'https://bookmytrip.web.app',
-    ],
+    origin: [process.env.CLIENT_DOMAIN],
     credentials: true,
     optionSuccessStatus: 200,
   })
@@ -77,6 +74,40 @@ app.get('/tickets/:id',  async(req,res) => {
   const result = await ticketsCollection.findOne({_id:new ObjectId(id)});   
   res.send(result)
 })
+
+//payment EndPoint 
+
+app.use(express.json());
+
+app.post('/create-checkout-session', async (req, res) => {
+  const paymentInfo = req.body;
+
+  const session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: paymentInfo?.title,
+            images: [paymentInfo?.image],
+          },
+          unit_amount: paymentInfo?.price * 100,
+        },
+        quantity: paymentInfo?.quantity,
+      }
+    ],
+    customer_email: paymentInfo?.customer?.email,
+    mode: 'payment',
+    metadata: {
+      ticketId: paymentInfo?.ticketId,
+      customer: paymentInfo?.customer?.email,
+    },
+    success_url: `${process.env.CLIENT_DOMAIN}/payment-success`,
+    cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.ticketId}`,
+  });
+
+  res.send({ url: session.url });
+});
 
 
   try {

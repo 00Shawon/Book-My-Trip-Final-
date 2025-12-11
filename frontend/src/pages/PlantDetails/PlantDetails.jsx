@@ -137,7 +137,7 @@ if (!ticket || !ticket._id) return <div>Ticket not found</div>;
             <Button onClick={() => setIsOpen(true)} label="Purchase" />
           </div>
 
-          <PurchaseModal closeModal={closeModal} isOpen={isOpen} />
+          <PurchaseModal ticket={ticket} closeModal={closeModal} isOpen={isOpen} />
         </div>
       </div>
     </Container>
