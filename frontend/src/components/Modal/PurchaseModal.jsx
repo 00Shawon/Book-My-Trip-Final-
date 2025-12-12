@@ -5,7 +5,7 @@ import axios from "axios";
 const PurchaseModal = ({ closeModal, isOpen, ticket }) => {
   // Total Price Calculation
   const { user } = useAuth();
- console.log('modaaaaaaaaaaaaaaaaaal',user)
+  console.log("modaaaaaaaaaaaaaaaaaal", user);
   const {
     _id,
     image,
@@ -40,12 +40,12 @@ const PurchaseModal = ({ closeModal, isOpen, ticket }) => {
       ticketId: _id,
     };
 
-    const {data} = await axios.post(
+    const { data } = await axios.post(
       `${import.meta.env.VITE_API_URL}/create-checkout-session`,
       paymentInfo
     );
-    window.location.href= data.url;
-    console.log('From Modaaaaaaaaal',data.url)
+    window.location.href = data.url;
+    console.log("From Modaaaaaaaaal", data.url);
   };
   return (
     <Dialog
@@ -85,7 +85,8 @@ const PurchaseModal = ({ closeModal, isOpen, ticket }) => {
               <p className="text-sm text-gray-500">Available Quantity: 5</p>
             </div>
             <div className="flex mt-2 justify-around">
-              <button onClick={handlePayment}
+              <button
+                onClick={handlePayment}
                 type="button"
                 className="cursor-pointer inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-green-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
               >

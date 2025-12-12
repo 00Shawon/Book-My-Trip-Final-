@@ -51,6 +51,7 @@ const client = new MongoClient(process.env.MONGODB_URI, {
 async function run() {
 const db = client.db('bookMyTripDB')
 const ticketsCollection = db.collection('tickets')
+const ordersCollection = db.collection('orders')
 
 
 //save ticket data in db
@@ -102,12 +103,77 @@ app.post('/create-checkout-session', async (req, res) => {
       ticketId: paymentInfo?.ticketId,
       customer: paymentInfo?.customer?.email,
     },
-    success_url: `${process.env.CLIENT_DOMAIN}/payment-success`,
+    success_url: `${process.env.CLIENT_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.ticketId}`,
   });
 
   res.send({ url: session.url });
 });
+
+app.post('/payment-success', async (req, res)=>{
+  const {sessionId} = req.body;
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const ticket = await ticketsCollection.findOne({
+      _id: new ObjectId(session.metadata.ticketId),
+    })
+
+const order = await ordersCollection.findOne({ transactionId: session.payment_intent})
+    
+  if(session.status === 'complete' && ticket && !order) {
+    //save order data in db
+    const orderInfo = {
+      ticketId: session.metadata.ticketId,
+      transactionId: session.payment_intent,
+      customer: session.metadata.customer,
+      status: 'pending',
+      seller: ticket.seller,
+      title: ticket.title,
+      category: ticket.category,
+      quantity:1,
+      price: session.amount_total/100,
+    }
+    const result = await ordersCollection.insertOne(orderInfo)
+    //update ticket quantity
+    await ticketsCollection.updateOne({
+       _id: new ObjectId(session.metadata.ticketId)
+    }, 
+  { $inc: {quantity:-1}}
+)
+return res.send ({
+  transactionId: session.payment_intent,
+  orderId: result.insertedId,
+})
+  }
+  
+  res.send( 
+    res.send ({
+  transactionId: session.payment_intent,
+  orderId: order._id,
+})
+  )
+})
+
+//get all orders for a customer my email
+
+app.get('/my-orders/:email', async(req, res)=> {
+  const email = req.params.email
+  const result = await ordersCollection.find({customer:email}).toArray();
+  res.send(result)
+})
+//get all orders for a seller to manage by his my email
+
+app.get('/manage-orders/:email', async(req, res)=> {
+  const email = req.params.email
+  const result = await ordersCollection.find({'seller.email':email}).toArray();
+  res.send(result)
+})
+//get all tickets of a seller  my email
+
+app.get('/my-inventory/:email', async(req, res)=> {
+  const email = req.params.email
+  const result = await ticketsCollection.find({'seller.email':email}).toArray();
+  res.send(result)
+})
 
 
   try {
