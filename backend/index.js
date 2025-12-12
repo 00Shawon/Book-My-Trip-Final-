@@ -131,6 +131,7 @@ const order = await ordersCollection.findOne({ transactionId: session.payment_in
       category: ticket.category,
       quantity:1,
       price: session.amount_total/100,
+      image: ticket?.image
     }
     const result = await ordersCollection.insertOne(orderInfo)
     //update ticket quantity

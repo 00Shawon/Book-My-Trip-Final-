@@ -11,7 +11,7 @@ const PlantDetails = () => {
   let [isOpen, setIsOpen] = useState(false)
 const {id} = useParams()
 
-const {data:ticket={}, isLoading, refetch} = useQuery({
+const {data:ticket={}, isLoading} = useQuery({
   queryKey:['ticket', id],
   queryFn: async() => {
       const result =await axios(`${import.meta.env.VITE_API_URL}/tickets/${id}`)
