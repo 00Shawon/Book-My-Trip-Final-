@@ -1,19 +1,19 @@
-require('dotenv').config()
-const express = require('express')
-const cors = require('cors')
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-const admin = require('firebase-admin')
-const port = process.env.PORT || 3000
-const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString(
-  'utf-8'
-)
-const serviceAccount = JSON.parse(decoded)
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const admin = require("firebase-admin");
+const port = process.env.PORT || 3000;
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+  "utf-8"
+);
+const serviceAccount = JSON.parse(decoded);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-})
+});
 
-const app = express()
+const app = express();
 // middleware
 app.use(
   cors({
@@ -21,24 +21,24 @@ app.use(
     credentials: true,
     optionSuccessStatus: 200,
   })
-)
-app.use(express.json())
+);
+app.use(express.json());
 
 // jwt middlewares
 const verifyJWT = async (req, res, next) => {
-  const token = req?.headers?.authorization?.split(' ')[1]
-  console.log(token)
-  if (!token) return res.status(401).send({ message: 'Unauthorized Access!' })
+  const token = req?.headers?.authorization?.split(" ")[1];
+  console.log(token);
+  if (!token) return res.status(401).send({ message: "Unauthorized Access!" });
   try {
-    const decoded = await admin.auth().verifyIdToken(token)
-    req.tokenEmail = decoded.email
-    console.log(decoded)
-    next()
+    const decoded = await admin.auth().verifyIdToken(token);
+    req.tokenEmail = decoded.email;
+    console.log(decoded);
+    next();
   } catch (err) {
-    console.log(err)
-    return res.status(401).send({ message: 'Unauthorized Access!', err })
+    console.log(err);
+    return res.status(401).send({ message: "Unauthorized Access!", err });
   }
-}
+};
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(process.env.MONGODB_URI, {
@@ -47,152 +47,200 @@ const client = new MongoClient(process.env.MONGODB_URI, {
     strict: true,
     deprecationErrors: true,
   },
-})
+});
 async function run() {
-const db = client.db('bookMyTripDB')
-const ticketsCollection = db.collection('tickets')
-const ordersCollection = db.collection('orders')
+  const db = client.db("bookMyTripDB");
+  const ticketsCollection = db.collection("tickets");
+  const ordersCollection = db.collection("orders");
+  const usersCollection = db.collection("users");
+  const sellerRequestCollection = db.collection("sellerRequest");
 
-
-//save ticket data in db
-app.post('/tickets',   async (req, res) => {
-  const ticket = req.body
-  console.log(ticket)
-  const result = await ticketsCollection.insertOne(ticket)
-  res.send(result)
-}) 
-
-// get all tickets 
-app.get('/tickets',  async(req,res) => {
-  const result = await ticketsCollection.find().toArray();   
-  res.send(result)
-})
-
-// get single tickets
-
-app.get('/tickets/:id',  async(req,res) => {
-  const id = req.params.id
-  const result = await ticketsCollection.findOne({_id:new ObjectId(id)});   
-  res.send(result)
-})
-
-//payment EndPoint 
-
-app.use(express.json());
-
-app.post('/create-checkout-session', async (req, res) => {
-  const paymentInfo = req.body;
-
-  const session = await stripe.checkout.sessions.create({
-    line_items: [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: paymentInfo?.title,
-            images: [paymentInfo?.image],
-          },
-          unit_amount: paymentInfo?.price * 100,
-        },
-        quantity: paymentInfo?.quantity,
-      }
-    ],
-    customer_email: paymentInfo?.customer?.email,
-    mode: 'payment',
-    metadata: {
-      ticketId: paymentInfo?.ticketId,
-      customer: paymentInfo?.customer?.email,
-    },
-    success_url: `${process.env.CLIENT_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.ticketId}`,
+  //save ticket data in db
+  app.post("/tickets", async (req, res) => {
+    const ticket = req.body;
+    console.log(ticket);
+    const result = await ticketsCollection.insertOne(ticket);
+    res.send(result);
   });
 
-  res.send({ url: session.url });
-});
+  // get all tickets
+  app.get("/tickets", async (req, res) => {
+    const result = await ticketsCollection.find().toArray();
+    res.send(result);
+  });
 
-app.post('/payment-success', async (req, res)=>{
-  const {sessionId} = req.body;
+  // get single tickets
+  app.get("/tickets/:id", async (req, res) => {
+    const id = req.params.id;
+    const result = await ticketsCollection.findOne({ _id: new ObjectId(id) });
+    res.send(result);
+  });
+
+  //payment EndPoint
+
+  app.use(express.json());
+
+  app.post("/create-checkout-session", async (req, res) => {
+    const paymentInfo = req.body;
+
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: paymentInfo?.title,
+              images: [paymentInfo?.image],
+            },
+            unit_amount: paymentInfo?.price * 100,
+          },
+          quantity: paymentInfo?.quantity,
+        },
+      ],
+      customer_email: paymentInfo?.customer?.email,
+      mode: "payment",
+      metadata: {
+        ticketId: paymentInfo?.ticketId,
+        customer: paymentInfo?.customer?.email,
+      },
+      success_url: `${process.env.CLIENT_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.ticketId}`,
+    });
+
+    res.send({ url: session.url });
+  });
+
+  app.post("/payment-success", async (req, res) => {
+    const { sessionId } = req.body;
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     const ticket = await ticketsCollection.findOne({
       _id: new ObjectId(session.metadata.ticketId),
-    })
+    });
 
-const order = await ordersCollection.findOne({ transactionId: session.payment_intent})
-    
-  if(session.status === 'complete' && ticket && !order) {
-    //save order data in db
-    const orderInfo = {
-      ticketId: session.metadata.ticketId,
+    const order = await ordersCollection.findOne({
       transactionId: session.payment_intent,
-      customer: session.metadata.customer,
-      status: 'pending',
-      seller: ticket.seller,
-      title: ticket.title,
-      category: ticket.category,
-      quantity:1,
-      price: session.amount_total/100,
-      image: ticket?.image
+    });
+
+    if (session.status === "complete" && ticket && !order) {
+      //save order data in db
+      const orderInfo = {
+        ticketId: session.metadata.ticketId,
+        transactionId: session.payment_intent,
+        customer: session.metadata.customer,
+        status: "pending",
+        seller: ticket.seller,
+        title: ticket.title,
+        category: ticket.category,
+        quantity: 1,
+        price: session.amount_total / 100,
+        image: ticket?.image,
+      };
+      const result = await ordersCollection.insertOne(orderInfo);
+      //update ticket quantity
+      await ticketsCollection.updateOne(
+        {
+          _id: new ObjectId(session.metadata.ticketId),
+        },
+        { $inc: { quantity: -1 } }
+      );
+      return res.send({
+        transactionId: session.payment_intent,
+        orderId: result.insertedId,
+      });
     }
-    const result = await ordersCollection.insertOne(orderInfo)
-    //update ticket quantity
-    await ticketsCollection.updateOne({
-       _id: new ObjectId(session.metadata.ticketId)
-    }, 
-  { $inc: {quantity:-1}}
-)
-return res.send ({
-  transactionId: session.payment_intent,
-  orderId: result.insertedId,
+
+    res.send(
+      res.send({
+        transactionId: session.payment_intent,
+        orderId: order._id,
+      })
+    );
+  });
+
+
+  //get all orders by customers by email
+app.get('/my-orders', verifyJWT, async (req, res) => {
+  const email = req.tokenEmail;
+
+  const orders = await ordersCollection
+    .find({ customer: email }) 
+    .toArray();
+
+  res.send(orders);
+});
+
+  //get all tickets of a seller  my email
+  app.get("/my-inventory/:email", async (req, res) => {
+    const email = req.params.email;
+    const result = await ticketsCollection
+      .find({ "seller.email": email })
+      .toArray();
+    res.send(result);
+  });
+
+  //save or update a user in db
+  app.post("/user", async (req, res) => {
+    const userData = req.body;
+    userData.created_at = new Date().toISOString()
+    userData.last_loggedIn = new Date().toISOString()
+    userData.role = 'customer'
+
+    const query = {
+          email: userData.email
+    }
+
+    const alreadyExists = await usersCollection.findOne(query)
+
+    console.log('user exists', !!alreadyExists)
+
+    if(alreadyExists){
+      console.log('Updating user info.....')
+   const result = await usersCollection.updateOne(query,{
+        $set:{
+          last_loggedIn : new Date().toISOString()
+        }
+      })
+      return res.send(result)
+    }
+      console.log('saving new user info.....')
+
+    const result = await usersCollection.insertOne(userData);
+    res.send(result);
+  });
+
+  //get user role
+app.get('/user/role',verifyJWT, async(req,res)=> {
+  const result = await usersCollection.findOne({email:req.tokenEmail})
+  res.send({role:result?.role})
 })
+
+//save become seller request
+app.post('/become-seller', verifyJWT, async(req, res)=> {
+  const email = req.tokenEmail
+  const alreadyExists = await sellerRequestCollection.findOne({email})
+  if(alreadyExists){
+    return res.status(409).send({message:'request have already been stored'})
   }
-  
-  res.send( 
-    res.send ({
-  transactionId: session.payment_intent,
-  orderId: order._id,
-})
-  )
-})
-
-//get all orders for a customer my email
-
-app.get('/my-orders/:email', async(req, res)=> {
-  const email = req.params.email
-  const result = await ordersCollection.find({customer:email}).toArray();
+  const result = await sellerRequestCollection.insertOne({email})
   res.send(result)
 })
-//get all orders for a seller to manage by his my email
-
-app.get('/manage-orders/:email', async(req, res)=> {
-  const email = req.params.email
-  const result = await ordersCollection.find({'seller.email':email}).toArray();
-  res.send(result)
-})
-//get all tickets of a seller  my email
-
-app.get('/my-inventory/:email', async(req, res)=> {
-  const email = req.params.email
-  const result = await ticketsCollection.find({'seller.email':email}).toArray();
-  res.send(result)
-})
-
 
   try {
     // Send a ping to confirm a successful connection
-    await client.db('admin').command({ ping: 1 })
+    await client.db("admin").command({ ping: 1 });
     console.log(
-      'Pinged your deployment. You successfully connected to MongoDB!'
-    )
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
   }
 }
-run().catch(console.dir)
+run().catch(console.dir);
 
-app.get('/', (req, res) => {
-  res.send('Hello from Server..')
-})
+app.get("/", (req, res) => {
+  res.send("Hello from Server..");
+});
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
-})
+  console.log(`Server is running on port ${port}`);
+});

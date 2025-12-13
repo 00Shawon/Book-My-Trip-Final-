@@ -7,22 +7,25 @@ import { GrLogout } from 'react-icons/gr'
 import { FcSettings } from 'react-icons/fc'
 import { AiOutlineBars } from 'react-icons/ai'
 import { BsGraphUp } from 'react-icons/bs'
+import useRole from '../../../hooks/useRole'
 
 // User Menu
 import MenuItem from './Menu/MenuItem'
 import AdminMenu from './Menu/AdminMenu'
 import SellerMenu from './Menu/SellerMenu'
 import CustomerMenu from './Menu/CustomerMenu'
+import LoadingSpinner from "../../Shared/LoadingSpinner";
 
 const Sidebar = () => {
   const { logOut } = useAuth()
   const [isActive, setActive] = useState(false)
+  const [role, isRoleLoading] = useRole()
 
   // Sidebar Responsive Handler
   const handleToggle = () => {
     setActive(!isActive)
   }
-
+if (isRoleLoading) return <LoadingSpinner/>
   return (
     <>
       {/* Small Screen Navbar, only visible till md breakpoint */}
@@ -71,9 +74,11 @@ const Sidebar = () => {
                 address='/dashboard'
               />
               {/* Role-Based Menu */}
-              <CustomerMenu />
-              <SellerMenu />
-              <AdminMenu />
+              {role === 'customer' && <CustomerMenu />}
+              {role === 'seller' && <SellerMenu />}
+              {role === 'admin' &&   <AdminMenu />}
+              
+            
             </nav>
           </div>
 

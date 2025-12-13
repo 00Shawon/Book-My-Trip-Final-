@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import { TbFidgetSpinner } from "react-icons/tb";
 import { useForm } from "react-hook-form";
 import LoginImage from "../../assets/auth/login.gif";
-import { imageUpload} from "../../utilis";
+import { imageUpload, saveOrUpdateUser} from "../../utilis";
 
 const SignUp = () => {
   const { createUser, updateUserProfile, signInWithGoogle, loading } =
@@ -44,6 +44,8 @@ const SignUp = () => {
  
       //2. User Registration
       const result = await createUser(email, password);
+
+      await saveOrUpdateUser({name, email , image: imageURL})
 
       //3. Save username & profile photo
       await updateUserProfile(name, imageURL);
@@ -88,7 +90,9 @@ const SignUp = () => {
   const handleGoogleSignIn = async () => {
     try {
       //User Registration using google
-      await signInWithGoogle();
+    const {user} =  await signInWithGoogle();
+
+      await saveOrUpdateUser({name: user?.displayName, email: user?.email , image: user?.photoURL})
 
       navigate(from, { replace: true });
       toast.success("Signup Successful");
